@@ -39,23 +39,19 @@ def create():
     if request.method == 'POST':
         # TODO: Get the new plant's name, variety, photo, & date planted, and 
         # store them in the object below.
-        name = request.form.get['plant_name']
-        variety = request.form.get['variety']
-        photo = request.form.get['photo']
-        date = request.form.get['date_planted']
-
+        
         new_plant = {
-            'name': name,
-            'variety': variety,
-            'photo_url': photo,
-            'date_planted': date
+            'name': request.form.get('plant_name'),
+            'variety': request.form.get('variety'),
+            'photo_url': request.form.get('photo'),
+            'date_planted': request.form.get('date_planted')
         }
         # TODO: Make an `insert_one` database call to insert the object into the
         # database's `plants` collection, and get its inserted id. Pass the 
         # inserted id into the redirect call below.
 
-        mongo.db.plants_data.insert_one(new_plant)
-        return redirect(url_for('detail', plant_id=''))
+        new_input_plant = mongo.db.plants_data.insert_one(new_plant)
+        return redirect(url_for('detail', plant_id=new_input_plant))
 
     else:
         return render_template('create.html')
@@ -66,14 +62,21 @@ def detail(plant_id):
 
     # TODO: Replace the following line with a database call to retrieve *one*
     # plant from the database, whose id matches the id passed in via the URL.
+    # plants = mongo.db.plants.find()
     plant_to_show = mongo.db.plants_data.find_one({'_id': ObjectId(plant_id)})
+    
 
     # TODO: Use the `find` database operation to find all harvests for the
     # plant's id.
     # HINT: This query should be on the `harvests` collection, not the `plants`
     # collection.
     harvests = mongo.db.harvests.find()
-    
+    add_harvest_for_plant = mongo.db.harvests.find({'plant_id': plant_id})
+    plant_harvests = []
+
+    for harvest in add_harvest_for_plant:
+        plant_harvests.append(harvest)
+
     context = {
         'plant' : plant_to_show,
         'harvests': harvests
@@ -90,8 +93,8 @@ def harvest(plant_id):
     # TODO: Create a new harvest object by passing in the form data from the
     # detail page form.
     new_harvest = {
-        'quantity': quantity, # e.g. '3 tomatoes'
-        'date': date,
+        'quantity': request.form('harvested_amount'), # e.g. '3 tomatoes'
+        'date': request.form('date_planted'),
         'plant_id': plant_id
     }
 
@@ -107,21 +110,15 @@ def edit(plant_id):
     if request.method == 'POST':
         # TODO: Make an `update_one` database call to update the plant with the
         # given id. Make sure to put the updated fields in the `$set` object.
-        name = request.form.get['plant_name']
-        variety = request.form.get['variety']
-        photo = request.form.get['photo']
-        date_planted = request.form.get['date_planted']
-
-        update_plant = {
-            'name' : name,
-            'variety' : variety,
-            'photo' : photo,
-            'date_planted' : date_planted
-        }
+        name = request.form.get('plant_name')
+        variety = request.form.get('variety')
+        photo_url = request.form.get('photo')
+        date_planted = request.form.get('date_planted')
         
         search_plant = {'_id': ObjectId(plant_id)}
-        change_plant = {'$set': update_plant}
-        update_plant = mongo.db.plants.update_one(search_plant, change_plant)
+        change_plant = {'$set': {'name': name, 'variety': variety, 'photo_url': photo_url, 'date_planted': date_planted}}
+        mongo.db.plants.update_one(search_plant, change_plant)
+
         return redirect(url_for('detail', plant_id=plant_id))
     else:
         # TODO: Make a `find_one` database call to get the plant object with the
@@ -147,4 +144,3 @@ def delete(plant_id):
 
 if __name__ == '__main__':
     app.run(debug=True)
-
