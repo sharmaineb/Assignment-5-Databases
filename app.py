@@ -39,10 +39,10 @@ def create():
     if request.method == 'POST':
         # TODO: Get the new plant's name, variety, photo, & date planted, and 
         # store them in the object below.
-        name = request.form['plant_name']
-        variety = request.form['variety']
-        photo = request.form['photo']
-        date = request.form['date_planted']
+        name = request.form.get['plant_name']
+        variety = request.form.get['variety']
+        photo = request.form.get['photo']
+        date = request.form.get['date_planted']
 
         new_plant = {
             'name': name,
@@ -107,10 +107,10 @@ def edit(plant_id):
     if request.method == 'POST':
         # TODO: Make an `update_one` database call to update the plant with the
         # given id. Make sure to put the updated fields in the `$set` object.
-        name = request.form['plant_name']
-        variety = request.form['variety']
-        photo = request.form['photo']
-        date_planted = request.form['date_planted']
+        name = request.form.get['plant_name']
+        variety = request.form.get['variety']
+        photo = request.form.get['photo']
+        date_planted = request.form.get['date_planted']
 
         update_plant = {
             'name' : name,
@@ -138,11 +138,11 @@ def edit(plant_id):
 def delete(plant_id):
     # TODO: Make a `delete_one` database call to delete the plant with the given
     # id.
-    search_plant = {'_id': ObjectId(plant_id)}
-    mongo.db.plants.delete_one(search_plant)
+   
+    mongo.db.plants.delete_one({'_id': ObjectId(plant_id)})
     # TODO: Also, make a `delete_many` database call to delete all harvests with
     # the given plant id.
-    delete_harvest = mongo.db.harvests.delete_many({'plant_id': plant_id})
+    mongo.db.harvests.delete_many({'plant_id': plant_id})
     return redirect(url_for('plants_list'))
 
 if __name__ == '__main__':
