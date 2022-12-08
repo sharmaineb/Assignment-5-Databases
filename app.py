@@ -50,8 +50,10 @@ def create():
         # database's `plants` collection, and get its inserted id. Pass the 
         # inserted id into the redirect call below.
 
-        new_input_plant = mongo.db.plants_data.insert_one(new_plant)
-        return redirect(url_for('detail', plant_id=new_input_plant))
+        result = mongo.db.plants_data.insert_one(new_plant)
+        print(new_plant)
+
+        return redirect(url_for('detail', plant_id=new_plant['_id']))
 
     else:
         return render_template('create.html')
@@ -64,18 +66,15 @@ def detail(plant_id):
     # plant from the database, whose id matches the id passed in via the URL.
     # plants = mongo.db.plants.find()
     plant_to_show = mongo.db.plants_data.find_one({'_id': ObjectId(plant_id)})
+    print(plant_to_show)
     
 
     # TODO: Use the `find` database operation to find all harvests for the
     # plant's id.
     # HINT: This query should be on the `harvests` collection, not the `plants`
     # collection.
-    harvests = mongo.db.harvests.find()
-    add_harvest_for_plant = mongo.db.harvests.find({'plant_id': plant_id})
-    plant_harvests = []
-
-    for harvest in add_harvest_for_plant:
-        plant_harvests.append(harvest)
+    harvests = mongo.db.harvests.find({'plant_id': plant_id})
+    print(harvests)
 
     context = {
         'plant' : plant_to_show,
@@ -88,19 +87,18 @@ def harvest(plant_id):
     """
     Accepts a POST request with data for 1 harvest and inserts into database.
     """
-    quantity = request.form['harvested_amount']
-    date = request.form['date_planted']
     # TODO: Create a new harvest object by passing in the form data from the
     # detail page form.
     new_harvest = {
-        'quantity': request.form('harvested_amount'), # e.g. '3 tomatoes'
-        'date': request.form('date_planted'),
+        'quantity': request.form.get('harvested_amount'), # e.g. '3 tomatoes'
+        'date': request.form.get('date_planted'),
         'plant_id': plant_id
     }
 
     # TODO: Make an `insert_one` database call to insert the object into the 
     # `harvests` collection of the database.
-    mongo.db.harvests.insert_one(new_harvest)
+    result = mongo.db.harvests.insert_one(new_harvest)
+    print(new_harvest)
 
     return redirect(url_for('detail', plant_id=plant_id))
 
@@ -110,14 +108,17 @@ def edit(plant_id):
     if request.method == 'POST':
         # TODO: Make an `update_one` database call to update the plant with the
         # given id. Make sure to put the updated fields in the `$set` object.
-        name = request.form.get('plant_name')
-        variety = request.form.get('variety')
-        photo_url = request.form.get('photo')
-        date_planted = request.form.get('date_planted')
+        result = mongo.db.plants.update_one(plant_id)
+        print(plant_id)
+
+        # name = request.form.get('plant_name')
+        # variety = request.form.get('variety')
+        # photo_url = request.form.get('photo')
+        # date_planted = request.form.get('date_planted')
         
-        search_plant = {'_id': ObjectId(plant_id)}
-        change_plant = {'$set': {'name': name, 'variety': variety, 'photo_url': photo_url, 'date_planted': date_planted}}
-        mongo.db.plants.update_one(search_plant, change_plant)
+        # search_plant = {'_id': ObjectId(plant_id)}
+        # change_plant = {'$set': {'name': name, 'variety': variety, 'photo_url': photo_url, 'date_planted': date_planted}}
+        # mongo.db.plants.update_one(search_plant, change_plant)
 
         return redirect(url_for('detail', plant_id=plant_id))
     else:
@@ -136,10 +137,13 @@ def delete(plant_id):
     # TODO: Make a `delete_one` database call to delete the plant with the given
     # id.
    
-    mongo.db.plants.delete_one({'_id': ObjectId(plant_id)})
+    result = mongo.db.plants.delete_one({'_id': ObjectId(plant_id)})
+    print(result.deleted_count)
     # TODO: Also, make a `delete_many` database call to delete all harvests with
     # the given plant id.
-    mongo.db.harvests.delete_many({'plant_id': plant_id})
+    result = mongo.db.harvests.delete_many({'plant_id': plant_id})
+    print(result.deleted_count)
+    
     return redirect(url_for('plants_list'))
 
 if __name__ == '__main__':
